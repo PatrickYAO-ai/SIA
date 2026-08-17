@@ -42,6 +42,7 @@ export default function PublierAnnonce() {
   const [enCours, setEnCours] = useState(false) // pour desactiver le bouton pendant l'envoi
   const [messageGps, setMessageGps] = useState('')
   const [photoEnCours, setPhotoEnCours] = useState(false)
+  const [gpsEnCours, setGpsEnCours] = useState(false)
 
   // --- 2. LES FONCTIONS DE GESTION -------------------------------------------
 
@@ -90,10 +91,36 @@ export default function PublierAnnonce() {
     }
 
     setMessageGps('Localisation en cours...')
+    setGpsEnCours(true)
+
+    // GARDE-FOU (piege verifie a la mesure, ne pas retirer).
+    // On demande ci-dessous au navigateur d'abandonner au bout de 10 s
+    // (option "timeout"). Mais certains navigateurs ne rappellent JAMAIS :
+    // c'est le cas quand la demande d'autorisation reste affichee sans que
+    // l'utilisateur y reponde. Sans ce garde-fou, le message "Localisation en
+    // cours..." restait alors affiche indefiniment, avec un bouton toujours
+    // cliquable sur lequel on pouvait s'acharner.
+    // On lance donc notre propre minuterie, un peu plus longue que celle du
+    // navigateur, pour reprendre la main s'il ne dit rien.
+    let repondu = false
+    const minuterie = setTimeout(() => {
+      if (repondu) return
+      repondu = true
+      setGpsEnCours(false)
+      setMessageGps(
+        "Le telephone n a pas repondu. Verifie l autorisation de localisation, ou choisis simplement ta zone dans la liste."
+      )
+    }, 12000)
 
     navigator.geolocation.getCurrentPosition(
       // Cas de succes
       (position) => {
+        // Le navigateur a fini par repondre : on annule le garde-fou.
+        if (repondu) return
+        repondu = true
+        clearTimeout(minuterie)
+        setGpsEnCours(false)
+
         const lat = position.coords.latitude
         const lng = position.coords.longitude
         setCoordonnees({ lat, lng })
@@ -107,6 +134,11 @@ export default function PublierAnnonce() {
       },
       // Cas d'echec (refus de l'utilisateur, GPS coupe, delai depasse...)
       (erreur) => {
+        if (repondu) return
+        repondu = true
+        clearTimeout(minuterie)
+        setGpsEnCours(false)
+
         const messages = {
           1: "Tu as refuse la geolocalisation. Choisis simplement ta zone dans la liste.",
           2: 'Position indisponible. Verifie que le GPS est active.',
@@ -358,9 +390,12 @@ export default function PublierAnnonce() {
           <button
             type="button" // sans ceci, un <button> dans un <form> soumettrait le formulaire
             onClick={localiserMoi}
-            className="w-full rounded-lg border border-valo-vert bg-valo-vert-clair px-4 py-3 text-sm font-semibold text-valo-vert transition hover:bg-valo-vert hover:text-white"
+            // Desactive pendant la recherche : evite que l'utilisateur relance
+            // dix demandes en s'acharnant sur le bouton.
+            disabled={gpsEnCours}
+            className="w-full rounded-lg border border-valo-vert bg-valo-vert-clair px-4 py-3 text-sm font-semibold text-valo-vert transition hover:bg-valo-vert hover:text-white disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-valo-vert-clair disabled:hover:text-valo-vert"
           >
-            📍 Utiliser ma position GPS actuelle (plus precis)
+            {gpsEnCours ? '📍 Localisation en cours...' : '📍 Utiliser ma position GPS actuelle (plus precis)'}
           </button>
 
           {messageGps && <p className="text-xs text-slate-600">{messageGps}</p>}
@@ -449,7 +484,8 @@ function MessageErreur({ children }) {
 /** Classes Tailwind communes a tous les champs, avec bordure rouge en cas d'erreur. */
 function classeChamp(erreur) {
   return (
-    'w-full rounded-lg border bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ' +
+    // py-3 : hauteur de 44 px, la taille tactile minimale du projet (CLAUDE.md section 2).
+    'w-full rounded-lg border bg-white px-3 py-3 text-sm focus:outline-none focus:ring-2 ' +
     (erreur
       ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
       : 'border-slate-300 focus:border-valo-vert focus:ring-valo-vert/20')

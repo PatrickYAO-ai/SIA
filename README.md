@@ -81,6 +81,14 @@ automatiquement — ce qui est indispensable au fonctionnement de la géolocalis
 | `npm run dev` | Serveur de développement, rechargement instantané |
 | `npm run build` | Fabrique le site final dans `dist/` |
 | `npm run preview` | Teste le site final en local avant mise en ligne |
+| `npm run verifier:donnees` | Contrôles rapides, sans navigateur (moins d'une seconde) |
+| `npm run verifier:navigateur` | Parcours complet dans un vrai navigateur |
+
+## Vérifier avant une présentation
+
+Un build qui réussit ne prouve pas que l'application fonctionne. Deux scripts pilotent
+l'application pour de vrai — photo, validation, géolocalisation, stockage saturé,
+ergonomie tactile, carte. Voir [`verification/README.md`](./verification/README.md).
 
 ## Licence
 

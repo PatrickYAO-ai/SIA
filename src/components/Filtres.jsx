@@ -42,7 +42,7 @@ export default function Filtres({ filtres, onChange, nombreResultats }) {
             id="filtre-materiau"
             value={filtres.materiau}
             onChange={(e) => modifier('materiau', e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-valo-vert focus:outline-none focus:ring-2 focus:ring-valo-vert/20"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm focus:border-valo-vert focus:outline-none focus:ring-2 focus:ring-valo-vert/20"
           >
             <option value="">Tous les materiaux</option>
             {MATERIAUX.map((materiau) => (
@@ -61,7 +61,7 @@ export default function Filtres({ filtres, onChange, nombreResultats }) {
             id="filtre-zone"
             value={filtres.zone}
             onChange={(e) => modifier('zone', e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-valo-vert focus:outline-none focus:ring-2 focus:ring-valo-vert/20"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm focus:border-valo-vert focus:outline-none focus:ring-2 focus:ring-valo-vert/20"
           >
             <option value="">Toute la Cote d'Ivoire</option>
             {/* Object.entries transforme {Abidjan: [...], "Autres villes": [...]}
@@ -90,7 +90,9 @@ export default function Filtres({ filtres, onChange, nombreResultats }) {
           <button
             type="button"
             onClick={() => onChange({ materiau: '', zone: '' })}
-            className="text-sm font-medium text-valo-vert hover:underline"
+            // px/py : zone tactile de 44 px de haut (voir CLAUDE.md, section 2).
+            // Le -mr-2 rattrape ce surplus pour que le texte reste aligne a droite.
+            className="-mr-2 rounded-lg px-2 py-3 text-sm font-medium text-valo-vert hover:underline"
           >
             Reinitialiser les filtres
           </button>

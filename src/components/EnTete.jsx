@@ -14,7 +14,8 @@ export default function EnTete() {
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         {/* Logo : un simple texte, aucune image a telecharger. */}
-        <Link to="/" className="flex items-center gap-2">
+        {/* py-1 : porte la zone tactile a 44 px de haut (voir CLAUDE.md, section 2). */}
+        <Link to="/" className="flex items-center gap-2 py-1">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-valo-vert text-lg text-white">
             ♻
           </span>
@@ -49,7 +50,8 @@ function LienOnglet({ to, actif, children }) {
     <Link
       to={to}
       className={
-        'rounded-lg px-3 py-2 text-sm font-medium transition ' +
+        // py-3 : zone tactile de 44 px de haut, utilisable avec des gants sur un chantier.
+        'rounded-lg px-3 py-3 text-sm font-medium transition ' +
         (actif ? 'bg-valo-vert-clair text-valo-vert' : 'text-slate-600 hover:bg-slate-100')
       }
     >

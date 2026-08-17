@@ -87,7 +87,8 @@ export default function ListeAnnonces() {
             // On retire le parametre de l'adresse pour que le message ne reapparaisse
             // pas si l'utilisateur recharge la page.
             onClick={() => setParametresUrl({})}
-            className="text-green-700 hover:text-green-900"
+            // h-11 w-11 : zone tactile de 44 px ; le -m-2 evite qu'elle ne decale le bandeau.
+            className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-green-700 hover:bg-green-100 hover:text-green-900"
             aria-label="Fermer le message"
           >
             ✕
@@ -104,7 +105,7 @@ export default function ListeAnnonces() {
         </div>
         <Link
           to="/publier"
-          className="rounded-lg bg-valo-orange px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700"
+          className="rounded-lg bg-valo-orange px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700"
         >
           + Publier une annonce
         </Link>
@@ -162,7 +163,7 @@ function ListeVide({ filtreActif }) {
       {!filtreActif && (
         <Link
           to="/publier"
-          className="mt-4 inline-block rounded-lg bg-valo-vert px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-800"
+          className="mt-4 inline-block rounded-lg bg-valo-vert px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-800"
         >
           Publier une annonce
         </Link>

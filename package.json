@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verifier:donnees": "node verification/donnees-et-fonctions.mjs",
+    "verifier:navigateur": "node verification/parcours-navigateur.mjs"
   },
   "repository": {
     "type": "git",

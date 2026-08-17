@@ -212,6 +212,18 @@ changer librement un `libelle` (le texte affiché) ; jamais un `id`.
   sur la carte.
 - **Un `<button>` dans un `<form>` soumet le formulaire.** Toujours écrire
   `type="button"` sur un bouton qui ne doit pas soumettre.
+- **Géolocalisation bloquée sur « Localisation en cours… ».** L'option `timeout`
+  passée à `getCurrentPosition` n'est pas toujours honorée : si l'utilisateur laisse la
+  demande d'autorisation sans réponse, le navigateur ne rappelle **jamais**. Le message
+  restait affiché indéfiniment, avec un bouton toujours cliquable. `PublierAnnonce.jsx`
+  a donc sa propre minuterie de 12 s (drapeau `repondu`) et désactive le bouton pendant
+  la recherche. **Ne pas retirer ce garde-fou.**
+- **Zones tactiles trop petites.** Les valeurs `py-2.5` de Tailwind donnent 40 px, sous
+  la barre des 44 px fixée en section 2. Utiliser `py-3` sur les champs, boutons et
+  `<select>`. Les contrôles `+` / `−` de Leaflet font 30 px par défaut : ils sont
+  agrandis dans `index.css`. Attention aux boutons qui n'apparaissent que sous condition
+  (« Réinitialiser les filtres », fermeture du bandeau) — ils échappent facilement à un
+  contrôle rapide.
 
 ## 8. Commandes
 
@@ -220,7 +232,16 @@ npm install      # installer les dépendances (une seule fois)
 npm run dev      # serveur de développement → http://localhost:5173
 npm run build    # fabriquer le site final dans dist/
 npm run preview  # tester le site final en local avant mise en ligne
+
+npm run verifier:donnees      # contrôles rapides, sans navigateur (< 1 s)
+npm run verifier:navigateur   # parcours complet dans un vrai navigateur
 ```
+
+**Un build qui passe ne prouve rien.** Trois vrais bugs (recentrage de la carte,
+géolocalisation bloquée, zones tactiles trop petites) sont passés à travers
+`npm run build` sans le moindre avertissement. Lancer `verifier:donnees` après toute
+modification de `src/data/`, et `verifier:navigateur` avant une présentation. Voir
+[`verification/README.md`](./verification/README.md).
 
 `npm run dev` est accessible depuis un téléphone sur le même wifi (option `host: true`
 dans `vite.config.js`) : afficher l'adresse réseau donnée dans le terminal.

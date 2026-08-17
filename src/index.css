@@ -18,6 +18,17 @@ body {
   z-index: 0;
 }
 
+/* Boutons + / - de la carte. Leaflet les dessine a 30 px, trop petits pour un
+   doigt sur un chantier. On les porte a 44 px, la taille tactile minimale
+   retenue pour tout le projet (voir CLAUDE.md, section 2). */
+.leaflet-touch .leaflet-bar a,
+.leaflet-bar a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 20px;
+}
+
 /* Marqueur personnalise de la carte (voir CarteInteractive.jsx).
    On dessine une pastille en CSS plutot que de telecharger une image :
    c'est plus leger et ca evite le bug classique des icones Leaflet avec Vite. */
