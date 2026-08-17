@@ -77,6 +77,11 @@ export default function CarteInteractive({ annonces, annonceActive, centre }) {
  * propre pastille en HTML/CSS via "divIcon" : plus leger (aucune image a
  * telecharger), et surtout coloree selon le materiau, ce qui permet au recycleur
  * d'identifier ce qui l'interesse sans cliquer sur chaque point.
+ *
+ * Cette fonction fabrique un objet neuf a chaque affichage, et c'est tres bien
+ * ainsi : Leaflet reutilise l'element HTML deja present au lieu de le
+ * reconstruire. Verifie a la mesure - aucun marqueur n'est recree lors d'un
+ * survol. Inutile donc d'ajouter un cache ici.
  */
 function creerIcone(annonce, estActif) {
   const materiau = trouverMateriau(annonce.materiau)
@@ -107,9 +112,21 @@ function RecentrerCarte({ annonces, centre }) {
   const carte = useMap()
 
   useEffect(() => {
+    // PIEGE CORRIGE - ne pas remettre d'animation ici.
+    // Changer de filtre declenche souvent DEUX recentrages coup sur coup : le
+    // premier au moment ou le filtre change, le second quand la nouvelle liste
+    // d'annonces arrive. Avec l'animation par defaut de Leaflet, le second ordre
+    // tombe pendant l'animation du premier et se trouve purement ignore : la
+    // carte restait alors sur la vue precedente, avec des annonces en dehors de
+    // l'ecran. En desactivant l'animation, chaque ordre s'applique
+    // immediatement et c'est bien le dernier qui gagne.
+    // Effet de bord bienvenu : moins de calcul d'animation sur les telephones
+    // d'entree de gamme.
+    const sansAnimation = { animate: false }
+
     // Priorite 1 : un centre impose par le filtre de zone.
     if (centre) {
-      carte.setView([centre.lat, centre.lng], 13)
+      carte.setView([centre.lat, centre.lng], 13, sansAnimation)
       return
     }
 
@@ -117,12 +134,16 @@ function RecentrerCarte({ annonces, centre }) {
     if (annonces.length > 0) {
       const limites = L.latLngBounds(annonces.map((a) => [a.lat, a.lng]))
       // padding : une marge pour que les marqueurs ne collent pas aux bords.
-      carte.fitBounds(limites, { padding: [40, 40], maxZoom: 15 })
+      carte.fitBounds(limites, { padding: [40, 40], maxZoom: 15, ...sansAnimation })
       return
     }
 
     // Priorite 3 : aucune annonce, on revient sur Abidjan.
-    carte.setView([CENTRE_PAR_DEFAUT.lat, CENTRE_PAR_DEFAUT.lng], ZOOM_PAR_DEFAUT)
+    carte.setView(
+      [CENTRE_PAR_DEFAUT.lat, CENTRE_PAR_DEFAUT.lng],
+      ZOOM_PAR_DEFAUT,
+      sansAnimation
+    )
     // La dependance sur "annonces" utilise les identifiants plutot que le tableau lui-meme :
     // sinon React relancerait ce code a chaque rendu, et la carte bougerait sans arret.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -192,6 +192,17 @@ changer librement un `libelle` (le texte affiché) ; jamais un `id`.
 - **`useMap()` plante.** Ce hook n'est utilisable que dans un composant placé *à
   l'intérieur* de `<MapContainer>`. D'où le composant `RecentrerCarte`, qui n'affiche
   rien mais pilote la carte.
+- **Recentrage de la carte perdu, annonces hors écran.** Changer un filtre déclenche
+  deux recentrages coup sur coup : un quand le filtre change, un quand la nouvelle liste
+  arrive. Avec l'animation par défaut de Leaflet, le second tombe *pendant* l'animation du
+  premier et est purement ignoré — la carte restait sur la vue précédente. Reproduit en
+  filtrant jusqu'à zéro résultat puis en réinitialisant : un marqueur finissait à 3 600 px
+  hors du cadre. Corrigé avec `{ animate: false }` sur tous les `setView` / `fitBounds` de
+  `CarteInteractive.jsx`. **Ne pas remettre d'animation** sans régler la course d'abord.
+- **Ne pas ajouter de cache d'icônes Leaflet.** `creerIcone` fabrique un objet neuf à
+  chaque affichage, et c'est volontaire : Leaflet réutilise l'élément HTML existant au
+  lieu de le reconstruire. Mesuré — zéro marqueur recréé lors d'un survol. Un cache
+  n'apporterait rien et ajouterait de la complexité.
 - **Erreur 404 en production sur `/publier`.** Une application React n'a qu'un seul
   fichier HTML. Le serveur doit renvoyer toutes les adresses vers `index.html` — c'est le
   rôle de `netlify.toml` et `vercel.json`. Ne pas supprimer ces fichiers.
