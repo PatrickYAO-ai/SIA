@@ -1,0 +1,21 @@
+# Configuration de deploiement Netlify.
+# Avec ce fichier, il suffit de connecter le depot GitHub a Netlify :
+# tout le reste est automatique, y compris le https.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# IMPORTANT : redirection obligatoire pour toute application React avec un routeur.
+#
+# Le probleme : l'application n'a qu'un seul vrai fichier (index.html), et c'est
+# React qui simule les pages /publier, / etc. Si un visiteur ouvre directement
+# https://valopro.netlify.app/publier, le serveur cherche un fichier "publier"
+# qui n'existe pas et renvoie une erreur 404.
+#
+# La solution : renvoyer TOUTES les adresses vers index.html, et laisser React
+# afficher la bonne page. C'est exactement ce que fait la regle ci-dessous.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

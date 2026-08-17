@@ -1,0 +1,30 @@
+/* Les 3 lignes ci-dessous injectent tout Tailwind. Ne pas les supprimer. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Quelques regles globales, volontairement peu nombreuses ---
+   Regle de travail : on style directement dans les composants avec les classes
+   Tailwind. On n'ecrit ici que ce qui doit s'appliquer partout. */
+
+body {
+  @apply bg-valo-gris text-slate-800 antialiased;
+}
+
+/* La carte Leaflet a besoin d'une hauteur explicite, sinon elle est invisible. */
+.leaflet-container {
+  @apply h-full w-full rounded-xl;
+  /* z-index bas pour que la carte ne passe jamais au-dessus du menu. */
+  z-index: 0;
+}
+
+/* Marqueur personnalise de la carte (voir CarteInteractive.jsx).
+   On dessine une pastille en CSS plutot que de telecharger une image :
+   c'est plus leger et ca evite le bug classique des icones Leaflet avec Vite. */
+.valo-marqueur {
+  @apply flex items-center justify-center rounded-full border-2 border-white text-white shadow-md;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  line-height: 1;
+}

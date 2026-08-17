@@ -1,0 +1,21 @@
+# Dependances installees par npm : jamais versionnees.
+# Elles se reinstallent avec "npm install" a partir de package.json.
+node_modules/
+
+# Resultat du build, regenere a chaque "npm run build".
+dist/
+
+# Variables d'environnement (cles d'API, mots de passe) : NE JAMAIS versionner.
+.env
+.env.local
+.env.*.local
+
+# Journaux
+*.log
+npm-debug.log*
+
+# Fichiers systeme et editeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
