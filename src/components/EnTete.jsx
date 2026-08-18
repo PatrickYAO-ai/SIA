@@ -20,7 +20,7 @@ export default function EnTete() {
             ♻
           </span>
           <span className="text-lg font-bold tracking-tight text-slate-900">
-            Valo<span className="text-valo-vert">Pro</span>
+            Valo<span className="text-valo-vert">BTP</span>
           </span>
         </Link>
 

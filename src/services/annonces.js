@@ -1,5 +1,5 @@
 // =============================================================================
-//  COUCHE DE DONNEES DE VALOPRO
+//  COUCHE DE DONNEES DE VALOBTP
 // =============================================================================
 //
 // C'EST LE FICHIER LE PLUS IMPORTANT DU PROJET. Lis ce bloc avant de le modifier.
@@ -33,7 +33,7 @@
  * Le numero de version permet, plus tard, de changer la forme des donnees
  * sans faire planter l'application des utilisateurs qui ont l'ancienne version.
  */
-const CLE_STOCKAGE = 'valopro.annonces.v1'
+const CLE_STOCKAGE = 'valobtp.annonces.v1'
 
 /**
  * Lit le tableau brut des annonces depuis le navigateur.
@@ -49,7 +49,7 @@ function lireStockage() {
     // on repart d'une liste vide plutot que de faire planter toute l'application.
     return Array.isArray(donnees) ? donnees : []
   } catch (erreur) {
-    console.error('ValoPro : donnees illisibles dans le navigateur.', erreur)
+    console.error('ValoBTP : donnees illisibles dans le navigateur.', erreur)
     return []
   }
 }

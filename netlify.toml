@@ -10,7 +10,7 @@
 #
 # Le probleme : l'application n'a qu'un seul vrai fichier (index.html), et c'est
 # React qui simule les pages /publier, / etc. Si un visiteur ouvre directement
-# https://valopro.netlify.app/publier, le serveur cherche un fichier "publier"
+# https://valobtp.netlify.app/publier, le serveur cherche un fichier "publier"
 # qui n'existe pas et renvoie une erreur 404.
 #
 # La solution : renvoyer TOUTES les adresses vers index.html, et laisser React

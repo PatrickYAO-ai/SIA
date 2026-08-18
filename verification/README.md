@@ -1,4 +1,4 @@
-# Vérifications de ValoPro
+# Vérifications de ValoBTP
 
 Deux scripts qui contrôlent que l'application fonctionne réellement — pas
 seulement qu'elle compile. Ils ont été écrits après avoir constaté qu'un build
@@ -49,7 +49,7 @@ vérifier celui-là avant une présentation.
 ```bash
 npm run build
 npx vite preview --port 4180
-VALOPRO_URL=http://localhost:4180 npm run verifier:navigateur
+VALOBTP_URL=http://localhost:4180 npm run verifier:navigateur
 ```
 
 ## À quoi ressemble un échec

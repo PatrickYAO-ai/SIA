@@ -1,4 +1,4 @@
-# ValoPro — contexte du projet
+# ValoBTP — contexte du projet
 
 > Ce fichier est lu automatiquement par Claude Code au début de chaque session.
 > Il évite d'avoir à réexpliquer le projet à chaque fois. À maintenir à jour
@@ -8,7 +8,7 @@
 
 ## 1. Le projet en trois phrases
 
-**ValoPro** met en relation les **chantiers BTP** et les **recycleurs** en Côte d'Ivoire,
+**ValoBTP** met en relation les **chantiers BTP** et les **recycleurs** en Côte d'Ivoire,
 pour que les déchets de chantier (gravats, béton, bois, ferraille…) soient valorisés
 plutôt qu'abandonnés en décharge sauvage.
 
@@ -56,7 +56,7 @@ vérifiée compatible. À ne pas mettre à jour sans raison précise.
 ├── index.html             ← page HTML unique, point de départ
 ├── package.json           ← dépendances et commandes npm
 ├── vite.config.js         ← configuration du build
-├── tailwind.config.js     ← couleurs de la marque ValoPro
+├── tailwind.config.js     ← couleurs de la marque ValoBTP
 ├── postcss.config.js      ← branchement de Tailwind (à ne pas toucher)
 ├── netlify.toml           ← déploiement Netlify
 ├── vercel.json            ← déploiement Vercel

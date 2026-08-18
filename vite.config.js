@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     port: 5173,
     // "host: true" rend le serveur accessible depuis un telephone sur le meme wifi.
-    // Pratique pour tester ValoPro sur un vrai smartphone pendant le developpement.
+    // Pratique pour tester ValoBTP sur un vrai smartphone pendant le developpement.
     host: true,
   },
   build: {

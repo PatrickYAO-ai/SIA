@@ -1,4 +1,4 @@
-# ♻️ ValoPro
+# ♻️ ValoBTP
 
 **Plateforme de mise en relation entre chantiers BTP et recycleurs en Côte d'Ivoire.**
 

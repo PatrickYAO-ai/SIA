@@ -85,7 +85,7 @@ export function messagePreRempli(annonce) {
   return [
     `Bonjour ${annonce.nomChantier},`,
     '',
-    `Je vous contacte via ValoPro au sujet de votre annonce "${annonce.titre}".`,
+    `Je vous contacte via ValoBTP au sujet de votre annonce "${annonce.titre}".`,
     `Materiau : ${materiau} - ${annonce.quantite} ${unite}`,
     `Lieu : ${zone}`,
     '',

@@ -34,7 +34,7 @@ export default function App() {
       <footer className="border-t border-slate-200 bg-white py-5">
         <div className="mx-auto max-w-5xl px-4 text-center text-xs text-slate-500">
           <p className="font-medium text-slate-600">
-            ValoPro · Valorisation des dechets de chantier en Cote d'Ivoire
+            ValoBTP · Valorisation des dechets de chantier en Cote d'Ivoire
           </p>
           <p className="mt-1">Prototype presente au SIA Digital Awards 2026 (GIBTP)</p>
         </div>

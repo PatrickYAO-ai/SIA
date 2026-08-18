@@ -1,4 +1,4 @@
-// Zones geographiques couvertes par ValoPro (Cote d'Ivoire).
+// Zones geographiques couvertes par ValoBTP (Cote d'Ivoire).
 //
 // Chaque zone porte ses coordonnees GPS approximatives (latitude / longitude).
 // Elles servent a deux choses :

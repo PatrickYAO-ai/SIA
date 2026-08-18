@@ -26,7 +26,7 @@
 //  Par defaut il teste le serveur de developpement (http://localhost:5173).
 //  Pour tester le site final, celui qui sera reellement mis en ligne :
 //     npm run build && npx vite preview --port 4180
-//     VALOPRO_URL=http://localhost:4180 npm run verifier:navigateur
+//     VALOBTP_URL=http://localhost:4180 npm run verifier:navigateur
 //
 //  IMPORTANT : sur un poste sans acces a OpenStreetMap, le fond de carte reste
 //  gris. Ce n'est pas un echec : les marqueurs et la carte fonctionnent quand
@@ -37,7 +37,7 @@ import { chromium } from 'playwright'
 
 // Chemin du navigateur. Laisse vide pour utiliser celui que Playwright installe.
 const CHROME = process.env.CHROME_PATH || undefined
-const BASE = process.env.VALOPRO_URL || 'http://localhost:5173'
+const BASE = process.env.VALOBTP_URL || 'http://localhost:5173'
 const S = process.env.CAPTURES || '.' // dossier ou deposer les captures d ecran
 
 let ko = 0
@@ -71,7 +71,7 @@ const annonceType = (o = {}) => ({
 
 async function seed(p, annonces) {
   await p.goto(BASE + '/', { waitUntil: 'domcontentloaded' })
-  await p.evaluate((a) => localStorage.setItem('valopro.annonces.v1', JSON.stringify(a)), annonces)
+  await p.evaluate((a) => localStorage.setItem('valobtp.annonces.v1', JSON.stringify(a)), annonces)
   await p.reload({ waitUntil: 'domcontentloaded' })
   await p.waitForTimeout(1800)
 }
@@ -91,7 +91,7 @@ async function remplirFormulaire(p, v = {}) {
   if (d.tel !== null) await p.getByPlaceholder('07 01 02 03 04').fill(d.tel)
 }
 
-console.log(`\n########## VERIFICATION VALOPRO — ${BASE} ##########`)
+console.log(`\n########## VERIFICATION VALOBTP — ${BASE} ##########`)
 
 // =====================================================================
 console.log('\n=== 1. PHOTO : compression avant enregistrement ===')
@@ -146,7 +146,7 @@ console.log('\n=== 1. PHOTO : compression avant enregistrement ===')
   await p.getByRole('button', { name: "Publier l'annonce" }).click()
   await p.waitForURL('**/?publiee=1', { timeout: 8000 })
   await p.waitForTimeout(1500)
-  const photoEnBase = await p.evaluate(() => JSON.parse(localStorage.getItem('valopro.annonces.v1'))[0].photo)
+  const photoEnBase = await p.evaluate(() => JSON.parse(localStorage.getItem('valobtp.annonces.v1'))[0].photo)
   ok(typeof photoEnBase === 'string' && photoEnBase.startsWith('data:image/jpeg;base64,'), 'photo enregistree en JPEG')
   ok(await p.locator('article img').first().isVisible(), 'photo affichee sur la fiche')
   await p.screenshot({ path: `${S}/v-photo.png`, fullPage: true })
@@ -245,7 +245,7 @@ console.log('\n=== 4. GEOLOCALISATION ===')
   await p.getByRole('button', { name: "Publier l'annonce" }).click()
   await p.waitForURL('**/?publiee=1', { timeout: 6000 })
   await p.waitForTimeout(1000)
-  const a = await p.evaluate(() => JSON.parse(localStorage.getItem('valopro.annonces.v1'))[0])
+  const a = await p.evaluate(() => JSON.parse(localStorage.getItem('valobtp.annonces.v1'))[0])
   ok(Math.abs(a.lat - 5.345) < 0.001 && Math.abs(a.lng + 4.08) < 0.001, 'coordonnees GPS reelles enregistrees')
   await p.context().close()
 
@@ -267,7 +267,7 @@ console.log('\n=== 4. GEOLOCALISATION ===')
   await p2.getByRole('button', { name: "Publier l'annonce" }).click()
   await p2.waitForURL('**/?publiee=1', { timeout: 6000 })
   await p2.waitForTimeout(1000)
-  const a2 = await p2.evaluate(() => JSON.parse(localStorage.getItem('valopro.annonces.v1'))[0])
+  const a2 = await p2.evaluate(() => JSON.parse(localStorage.getItem('valobtp.annonces.v1'))[0])
   ok(Math.abs(a2.lat - 4.7485) < 0.01 && Math.abs(a2.lng + 6.6363) < 0.01,
      'repli sur le centre de la zone : annonce toujours placee sur la carte')
   ok(await p2.locator('.valo-marqueur').count() === 1, 'marqueur present malgre le refus du GPS')
@@ -291,7 +291,7 @@ console.log('\n=== 5. SUPPRESSION ===')
   await p.waitForTimeout(1000)
   ok(await p.locator('article').count() === 1, 'confirmation : annonce supprimee')
   ok(await p.locator('.valo-marqueur').count() === 1, 'marqueur retire de la carte')
-  const reste = await p.evaluate(() => JSON.parse(localStorage.getItem('valopro.annonces.v1')))
+  const reste = await p.evaluate(() => JSON.parse(localStorage.getItem('valobtp.annonces.v1')))
   ok(reste.length === 1 && reste[0].titre === 'A garder', 'la bonne annonce a ete supprimee')
   ok(p.__err.length === 0, 'aucune erreur JS', p.__err.join(' | '))
   await p.context().close()
@@ -308,7 +308,7 @@ console.log('\n=== 6. DONNEES CORROMPUES DANS LE NAVIGATEUR ===')
   ]) {
     const p = await page()
     await p.goto(BASE + '/', { waitUntil: 'domcontentloaded' })
-    await p.evaluate((v) => localStorage.setItem('valopro.annonces.v1', v), valeur)
+    await p.evaluate((v) => localStorage.setItem('valobtp.annonces.v1', v), valeur)
     await p.reload({ waitUntil: 'domcontentloaded' })
     await p.waitForTimeout(1500)
     const vivant = await p.locator('h1').isVisible()
@@ -475,7 +475,7 @@ console.log('\n=== 10. STOCKAGE SATURE ===')
   const restant = await p.evaluate(() => {
     // On remplit jusqu'au refus, par blocs de plus en plus fins, pour ne
     // laisser aucune place : c'est l'etat d'un telephone dont le stockage
-    // ValoPro est reellement sature de photos.
+    // ValoBTP est reellement sature de photos.
     let i = 0
     for (const taille of [256, 32, 4, 1]) {
       const bloc = 'x'.repeat(taille * 1024)

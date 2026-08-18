@@ -1,4 +1,4 @@
-// Liste FIXE des types de materiaux valorisables sur ValoPro.
+// Liste FIXE des types de materiaux valorisables sur ValoBTP.
 //
 // Pourquoi une liste fixe plutot qu'un champ texte libre ?
 // Parce que si chaque chantier ecrit ce qu'il veut ("beton", "Béton", "beton arme"),

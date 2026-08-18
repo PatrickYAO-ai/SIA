@@ -7,7 +7,7 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
-      // Palette ValoPro. On definit les couleurs une seule fois ici,
+      // Palette ValoBTP. On definit les couleurs une seule fois ici,
       // ensuite on ecrit simplement "bg-valo-vert" partout dans l'application.
       colors: {
         'valo-vert': '#15803d', // vert principal (valorisation, recyclage)
