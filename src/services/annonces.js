@@ -4,96 +4,56 @@
 //
 // C'EST LE FICHIER LE PLUS IMPORTANT DU PROJET. Lis ce bloc avant de le modifier.
 //
-// Aujourd'hui, les annonces sont enregistrees dans le localStorage du navigateur :
-// une petite base de donnees integree a Chrome / Firefox, qui survit a la fermeture
-// de l'onglet. Aucun serveur, aucun compte a creer, aucun cout : parfait pour
-// un prototype qu'on doit pouvoir demontrer partout, meme sans connexion internet.
+// Depuis la migration vers Supabase, les annonces sont enregistrees dans une
+// vraie base de donnees partagee, hebergee en ligne. Tous les visiteurs du
+// site — chantiers et recycleurs, sur n'importe quel telephone ou ordinateur —
+// lisent et ecrivent dans la MEME base. C'est ce qui permet a un recycleur de
+// voir l'annonce publiee par un chantier a l'autre bout de la ville.
 //
-// SA LIMITE, a connaitre et a assumer devant le jury :
-// les annonces restent sur LE telephone qui les a creees. Deux utilisateurs
-// differents ne voient pas les memes annonces. C'est acceptable pour une preuve
-// de concept, pas pour la vraie vie.
+// (Avant cette migration, les annonces vivaient dans le localStorage du
+// navigateur : chaque telephone avait sa propre liste, invisible des autres.
+// Voir l'historique Git si besoin de retrouver cette version.)
 //
 // POURQUOI TOUT PASSER PAR CE FICHIER ?
-// Aucune page de l'application ne parle directement a localStorage. Elles appellent
+// Aucune page de l'application ne parle directement a Supabase. Elles appellent
 // uniquement les fonctions ci-dessous (listerAnnonces, creerAnnonce, ...).
-// Le jour ou tu passes a une vraie base de donnees (Supabase, Firebase, ton propre
-// serveur Node), tu ne reecris QUE ce fichier : tu remplaces le contenu des fonctions,
-// tu gardes exactement les memes noms, et tout le reste de l'application continue
-// de fonctionner sans y toucher. C'est ce qu'on appelle "isoler la couche de donnees",
-// et c'est ce qui evite de tout casser lors d'une migration.
+// Si un jour le projet change encore de base de donnees, on ne reecrit QUE ce
+// fichier : on garde exactement les memes noms de fonctions, et tout le reste
+// de l'application continue de fonctionner sans y toucher. C'est ce qu'on
+// appelle "isoler la couche de donnees".
 //
-// Toutes les fonctions sont deja "async" (asynchrones) alors que localStorage est
-// instantane. C'est volontaire : un vrai serveur, lui, met du temps a repondre.
-// En ecrivant async des maintenant, les pages sont deja pretes pour cette bascule.
+// LIMITE A ASSUMER DEVANT LE JURY :
+// Il n'y a pas de compte utilisateur. N'importe quel visiteur peut supprimer
+// n'importe quelle annonce, pas seulement les siennes — exactement comme le
+// permettait deja la version precedente sur son propre telephone, mais cette
+// fois-ci le geste est visible de tous. Acceptable pour une preuve de concept
+// publique ; la piste d'evolution n°2 de CLAUDE.md (comptes Chantier /
+// Recycleur) est ce qui regle ce point pour une mise en production.
 // =============================================================================
 
-/**
- * Cle sous laquelle les annonces sont rangees dans le navigateur.
- * Le numero de version permet, plus tard, de changer la forme des donnees
- * sans faire planter l'application des utilisateurs qui ont l'ancienne version.
- */
-const CLE_STOCKAGE = 'valobtp.annonces.v1'
+import { supabase } from './supabaseClient.js'
+
+/** Nom de la table Supabase qui contient les annonces. */
+const TABLE = 'annonces'
 
 /**
- * Lit le tableau brut des annonces depuis le navigateur.
- * Fonction interne (non exportee) : le reste de l'application ne doit pas s'en servir.
+ * Transforme une erreur Supabase en message comprehensible.
+ * Fonction interne : Supabase renvoie des erreurs techniques (en anglais,
+ * parfois cryptiques) ; on les remplace par un message utile en francais.
  */
-function lireStockage() {
-  try {
-    const brut = localStorage.getItem(CLE_STOCKAGE)
-    if (!brut) return []
-
-    const donnees = JSON.parse(brut)
-    // Ceinture et bretelles : si quelqu'un a corrompu la valeur a la main,
-    // on repart d'une liste vide plutot que de faire planter toute l'application.
-    return Array.isArray(donnees) ? donnees : []
-  } catch (erreur) {
-    console.error('ValoBTP : donnees illisibles dans le navigateur.', erreur)
-    return []
-  }
+function erreurLisible(erreur, contexte) {
+  console.error(`ValoBTP : echec Supabase (${contexte}).`, erreur)
+  return new Error(
+    "Impossible de joindre la base de donnees en ligne. Verifie ta connexion " +
+      'internet et reessaie dans un instant.'
+  )
 }
-
-/**
- * Enregistre le tableau complet des annonces dans le navigateur.
- * Fonction interne.
- */
-function ecrireStockage(annonces) {
-  try {
-    localStorage.setItem(CLE_STOCKAGE, JSON.stringify(annonces))
-  } catch (erreur) {
-    // L'erreur la plus frequente ici : le quota de 5 Mo est atteint (trop de photos).
-    // On renvoie un message comprehensible plutot que l'erreur technique du navigateur.
-    if (erreur.name === 'QuotaExceededError' || erreur.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-      throw new Error(
-        "L'espace de stockage du navigateur est plein. Supprime quelques annonces existantes avant d'en publier une nouvelle."
-      )
-    }
-    throw erreur
-  }
-}
-
-/**
- * Genere un identifiant unique pour une nouvelle annonce.
- * crypto.randomUUID est disponible sur tous les navigateurs modernes ;
- * on prevoit quand meme une solution de repli pour les vieux telephones Android.
- */
-function genererId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return `annonce-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-}
-
-// -----------------------------------------------------------------------------
-//  API PUBLIQUE : les seules fonctions que les pages ont le droit d'appeler.
-// -----------------------------------------------------------------------------
 
 /**
  * Forme d'une annonce (le "modele de donnees") :
  *
  * {
- *   id: string,             identifiant unique
+ *   id: string,             identifiant unique, genere par la base de donnees
  *   titre: string,          ex. "Gravats de demolition - Villa Cocody"
  *   materiau: string,       id issu de src/data/materiaux.js (ex. "gravats")
  *   quantite: number,       ex. 12
@@ -105,7 +65,7 @@ function genererId() {
  *   lng: number,            longitude GPS
  *   nomChantier: string,    nom de l'entreprise ou du chantier
  *   telephone: string,      numero WhatsApp au format international (ex. "2250701020304")
- *   creeLe: string          date de creation au format ISO
+ *   creeLe: string          date de creation au format ISO, generee par la base
  * }
  */
 
@@ -114,10 +74,13 @@ function genererId() {
  * @returns {Promise<Array>} la liste des annonces
  */
 export async function listerAnnonces() {
-  const annonces = lireStockage()
-  // On trie du plus recent au plus ancien : c'est ce qu'attend un recycleur
-  // qui ouvre l'application pour voir "ce qu'il y a de nouveau".
-  return [...annonces].sort((a, b) => new Date(b.creeLe) - new Date(a.creeLe))
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('*')
+    .order('creeLe', { ascending: false })
+
+  if (error) throw erreurLisible(error, 'listerAnnonces')
+  return data
 }
 
 /**
@@ -125,29 +88,26 @@ export async function listerAnnonces() {
  * @param {string} id
  */
 export async function trouverAnnonce(id) {
-  return lireStockage().find((annonce) => annonce.id === id) ?? null
+  const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).maybeSingle()
+
+  if (error) throw erreurLisible(error, 'trouverAnnonce')
+  return data
 }
 
 /**
  * Cree une nouvelle annonce.
- * L'id et la date de creation sont generes ici : la page qui appelle
- * n'a pas a s'en occuper.
+ * L'id et la date de creation sont generes par la base de donnees elle-meme
+ * (voir la table "annonces" cote Supabase) : la page qui appelle n'a pas a
+ * s'en occuper.
  *
  * @param {object} donnees - les champs saisis dans le formulaire
  * @returns {Promise<object>} l'annonce complete telle qu'enregistree
  */
 export async function creerAnnonce(donnees) {
-  const annonce = {
-    ...donnees,
-    id: genererId(),
-    creeLe: new Date().toISOString(),
-  }
+  const { data, error } = await supabase.from(TABLE).insert(donnees).select().single()
 
-  const annonces = lireStockage()
-  annonces.push(annonce)
-  ecrireStockage(annonces)
-
-  return annonce
+  if (error) throw erreurLisible(error, 'creerAnnonce')
+  return data
 }
 
 /**
@@ -156,35 +116,40 @@ export async function creerAnnonce(donnees) {
  * @param {string} id
  */
 export async function supprimerAnnonce(id) {
-  const annonces = lireStockage().filter((annonce) => annonce.id !== id)
-  ecrireStockage(annonces)
+  const { error } = await supabase.from(TABLE).delete().eq('id', id)
+
+  if (error) throw erreurLisible(error, 'supprimerAnnonce')
 }
 
 /**
  * Filtre les annonces par materiau et/ou par zone.
  *
- * Le filtrage est fait ici, dans la couche de donnees, et non dans la page.
- * Raison : avec une vraie base de donnees, ce filtrage sera fait par le serveur
- * (bien plus rapide sur des milliers d'annonces). En le placant deja ici,
- * la bascule se fera sans toucher a la page.
+ * Le filtrage est fait ici, dans la couche de donnees : c'est Supabase (le
+ * serveur) qui trie parmi toutes les annonces et ne renvoie que celles qui
+ * correspondent, plutot que de tout envoyer au telephone pour filtrer sur
+ * place. Important en 3G : moins de donnees a faire transiter.
  *
  * @param {{materiau?: string, zone?: string}} filtres - une valeur vide = "tous"
  */
 export async function filtrerAnnonces({ materiau = '', zone = '' } = {}) {
-  const annonces = await listerAnnonces()
+  let requete = supabase.from(TABLE).select('*').order('creeLe', { ascending: false })
 
-  return annonces.filter((annonce) => {
-    const materiauOk = !materiau || annonce.materiau === materiau
-    const zoneOk = !zone || annonce.zone === zone
-    // Une annonce n'est gardee que si elle passe TOUS les filtres actifs.
-    return materiauOk && zoneOk
-  })
+  if (materiau) requete = requete.eq('materiau', materiau)
+  if (zone) requete = requete.eq('zone', zone)
+
+  const { data, error } = await requete
+  if (error) throw erreurLisible(error, 'filtrerAnnonces')
+  return data
 }
 
 /**
  * Efface toutes les annonces. Reservee au bouton de reinitialisation
- * de la demonstration : a manipuler avec precaution, l'action est irreversible.
+ * de la demonstration : a manipuler avec precaution, l'action est irreversible
+ * et touche desormais la base PARTAGEE par tous les visiteurs du site.
  */
 export async function viderAnnonces() {
-  ecrireStockage([])
+  // Supabase exige un filtre explicite sur delete() par securite : "id n'est
+  // jamais vide" est une condition toujours vraie, donc ceci supprime tout.
+  const { error } = await supabase.from(TABLE).delete().not('id', 'is', null)
+  if (error) throw erreurLisible(error, 'viderAnnonces')
 }

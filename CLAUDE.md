@@ -26,7 +26,7 @@ Ces contraintes priment sur toute considération d'élégance technique.
 | Contrainte | Conséquence concrète sur le code |
 |---|---|
 | **Développeur autodidacte** | Code simple et abondamment commenté en français. Pas d'abstraction « maligne ». Si un choix demande plus de trois phrases d'explication, c'est probablement le mauvais choix. |
-| **Faible connectivité (3G)** | Le site doit rester léger. Budget actuel : **~109 Ko compressés**. Toute nouvelle dépendance doit être justifiée par rapport à ce budget. |
+| **Faible connectivité (3G)** | Le site doit rester léger. Budget actuel : **~166 Ko compressés** (+58 Ko depuis le passage à Supabase — voir section 6). Toute nouvelle dépendance doit être justifiée par rapport à ce budget. |
 | **Usage majoritairement mobile** | On conçoit d'abord pour un écran de téléphone, on adapte ensuite pour l'ordinateur (`sm:`, `lg:` en Tailwind). Zones tactiles d'au moins 44 px de haut. |
 | **Zéro budget** | Aucun service payant, aucune clé d'API nécessitant une carte bancaire. C'est pour cela qu'on utilise OpenStreetMap et non Google Maps. |
 
@@ -40,7 +40,7 @@ Ces contraintes priment sur toute considération d'élégance technique.
 | Navigation | **React Router 6** | Standard de fait pour les pages d'une application React. |
 | Carte | **Leaflet + react-leaflet + OpenStreetMap** | Gratuit, sans clé d'API, ~40 Ko. Google Maps impose une facturation active dès le premier chargement. |
 | Contact | **Lien `wa.me`** | Aucune messagerie à développer. Chantiers et recycleurs utilisent déjà WhatsApp au quotidien. |
-| Stockage | **`localStorage` du navigateur** | Aucun serveur, aucun compte, fonctionne hors ligne. Voir la limite en section 6. |
+| Stockage | **Supabase** (base PostgreSQL en ligne) | Base de données partagée : tous les visiteurs voient les mêmes annonces. Gratuit, sans carte bancaire. Voir section 6. |
 
 **Versions volontairement non « dernières »** : React 18 plutôt que 19, Tailwind 3 plutôt
 que 4, React Router 6 plutôt que 7. Ces versions concentrent l'immense majorité des
@@ -70,7 +70,8 @@ vérifiée compatible. À ne pas mettre à jour sans raison précise.
     │   └── zones.js       ← communes d'Abidjan + villes, avec leurs coordonnées GPS
     │
     ├── services/          ← ACCÈS AUX DONNÉES — voir section 6
-    │   └── annonces.js    ← lister / créer / filtrer / supprimer les annonces
+    │   ├── supabaseClient.js ← ouvre la connexion a la base (seul endroit du projet)
+    │   └── annonces.js       ← lister / créer / filtrer / supprimer les annonces
     │
     ├── utils/             ← fonctions utilitaires sans affichage
     │   ├── image.js       ← compression des photos avant enregistrement
@@ -138,22 +139,31 @@ verra un jury.
 
 ## 6. Le point le plus important : `src/services/annonces.js`
 
-**Aucune page ne parle directement à `localStorage`.** Toutes passent par les fonctions
-de `src/services/annonces.js` (`listerAnnonces`, `creerAnnonce`, `filtrerAnnonces`,
-`supprimerAnnonce`).
+**Aucune page ne parle directement à Supabase.** Toutes passent par les fonctions de
+`src/services/annonces.js` (`listerAnnonces`, `creerAnnonce`, `filtrerAnnonces`,
+`supprimerAnnonce`), qui elles seules importent `src/services/supabaseClient.js`.
 
-Cette règle a un but précis : le jour où le projet passe à une vraie base de données
-(Supabase, Firebase, serveur Node), **seul ce fichier sera réécrit**. Les noms des
-fonctions restent identiques, et le reste de l'application continue de fonctionner sans
-modification. C'est ce qu'on appelle *isoler la couche de données*.
+Cette règle a un but précis : si le projet change encore de base de données un jour,
+**seuls ces deux fichiers seront réécrits**. Les noms des fonctions restent identiques,
+et le reste de l'application continue de fonctionner sans modification. C'est ce qu'on
+appelle *isoler la couche de données*.
 
-C'est aussi pour cela que ces fonctions sont déjà `async` alors que `localStorage` est
-instantané : un vrai serveur, lui, met du temps à répondre. Les pages sont donc déjà
-prêtes pour cette bascule.
+**Le stockage n'est plus `localStorage` mais Supabase** (une base PostgreSQL hébergée
+en ligne, gratuite, sans carte bancaire). Toutes les
+annonces sont dans une **table partagée** : un chantier à Bouaké et un recycleur à
+Abidjan voient exactement la même liste, en temps réel. C'est ce qui manquait à la
+version précédente pour être une vraie démonstration multi-utilisateurs.
 
-**Limite à assumer devant le jury** : avec `localStorage`, les annonces restent sur le
-téléphone qui les a créées. Deux utilisateurs ne voient pas les mêmes annonces. C'est
-acceptable pour une preuve de concept, pas pour la mise en production.
+**Connexion :** deux variables d'environnement, `VITE_SUPABASE_URL` et
+`VITE_SUPABASE_ANON_KEY`, définies dans `.env` en local (jamais versionné — voir
+`.env.example` pour le modèle) et dans les réglages d'environnement de Netlify en
+production. La clé `anon` / `publishable` est **faite pour être publique** : elle finit
+de toute façon dans le code téléchargé par le navigateur. Ce n'est pas un secret.
+
+**Limite à assumer devant le jury** : il n'y a pas de compte utilisateur. N'importe quel
+visiteur peut supprimer n'importe quelle annonce, pas seulement les siennes — la piste
+d'évolution n°2 (comptes Chantier / Recycleur) est ce qui règle ce point pour une mise
+en production.
 
 **Modèle de données d'une annonce :**
 
@@ -181,9 +191,11 @@ changer librement un `libelle` (le texte affiché) ; jamais un `id`.
 
 ## 7. Pièges déjà rencontrés et résolus
 
-- **Photos et quota.** `localStorage` est limité à ~5 Mo, une photo de smartphone pèse
-  3 à 8 Mo. `src/utils/image.js` redimensionne à 1000 px et recompresse en JPEG (~100 Ko)
-  **avant** tout enregistrement. Ne jamais enregistrer une photo brute.
+- **Photos et poids réseau.** Une photo de smartphone pèse 3 à 8 Mo — inenvoyable en 3G.
+  `src/utils/image.js` redimensionne à 1000 px et recompresse en JPEG (~100 Ko) **avant**
+  tout envoi vers Supabase. Ne jamais enregistrer une photo brute. (Vrai même si Supabase
+  n'a plus la limite de 5 Mo de `localStorage` : le goulot reste la connexion du chantier,
+  pas la base de données.)
 - **Icônes Leaflet cassées avec Vite.** Problème classique de chemin d'images. Contourné
   en dessinant les marqueurs en HTML/CSS via `L.divIcon` (voir `CarteInteractive.jsx`) :
   plus léger, et coloré par matériau.
@@ -227,6 +239,11 @@ changer librement un `libelle` (le texte affiché) ; jamais un `id`.
 
 ## 8. Commandes
 
+**Préalable, une seule fois : copier `.env.example` en `.env`** et le remplir avec les
+identifiants du projet Supabase (`Settings` → `API Keys` sur supabase.com). Sans ce
+fichier, l'application refuse de démarrer avec un message clair plutôt qu'une page
+blanche silencieuse.
+
 ```bash
 npm install      # installer les dépendances (une seule fois)
 npm run dev      # serveur de développement → http://localhost:5173
@@ -248,10 +265,10 @@ dans `vite.config.js`) : afficher l'adresse réseau donnée dans le terminal.
 
 ## 9. Pistes d'évolution, par ordre de priorité
 
-1. **Vraie base de données partagée** (Supabase). Ne modifier que
-   `src/services/annonces.js`. C'est ce qui débloque la démonstration multi-utilisateurs.
+1. ~~Vraie base de données partagée (Supabase)~~ — **fait.** Voir section 6.
 2. **Comptes utilisateurs** avec les deux profils Chantier / Recycleur, pour qu'un
-   chantier ne puisse modifier que ses propres annonces.
+   chantier ne puisse modifier que ses propres annonces (aujourd'hui, n'importe quel
+   visiteur peut supprimer n'importe quelle annonce — voir la limite en section 6).
 3. **Recherche par proximité** : « les annonces à moins de 10 km de moi ».
 4. **Mode hors ligne** (PWA) : consulter les annonces déjà chargées sans réseau — un
    vrai atout côté connectivité.

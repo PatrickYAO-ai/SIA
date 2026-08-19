@@ -9,7 +9,11 @@ les recycleurs les trouvent sur une carte et les contactent sur WhatsApp.
 
 ---
 
-## Démarrer en 3 commandes
+## Démarrer
+
+**1.** Copie `.env.example` en `.env`, et remplis-le avec les identifiants de ton projet
+Supabase (`Settings` → `API Keys` sur [supabase.com](https://supabase.com)). Sans ce
+fichier, l'application ne démarre pas — voir « Où sont les données ? » ci-dessous.
 
 ```bash
 npm install     # à faire une seule fois
@@ -40,22 +44,23 @@ déjà rédigé (matériau, quantité, lieu inclus).
 
 ## Stack technique
 
-React 18 · Vite 5 · Tailwind CSS 3 · React Router 6 · Leaflet + OpenStreetMap
+React 18 · Vite 5 · Tailwind CSS 3 · React Router 6 · Leaflet + OpenStreetMap · Supabase
 
-Site final : **~109 Ko compressés** — pensé pour fonctionner en 3G.
-Aucune clé d'API, aucun service payant, aucun compte à créer.
+Site final : **~166 Ko compressés** — pensé pour fonctionner en 3G.
+Aucun service payant, aucun compte à créer côté visiteur.
 
 Le détail des choix techniques et des conventions de code se trouve dans
 [`CLAUDE.md`](./CLAUDE.md).
 
 ## Où sont les données ?
 
-Dans ce prototype, les annonces sont enregistrées dans le **navigateur** (`localStorage`).
-Aucun serveur n'est nécessaire, mais les annonces restent sur l'appareil qui les a créées.
+Les annonces sont enregistrées dans **Supabase**, une base de données partagée en ligne
+(gratuite, sans carte bancaire). Tous les visiteurs — chantiers et recycleurs, sur
+n'importe quel appareil — voient exactement la même liste d'annonces.
 
-Tout l'accès aux données passe par un seul fichier — `src/services/annonces.js` — afin que
-le passage à une vraie base de données (Supabase, Firebase…) ne demande de réécrire que
-ce fichier, sans toucher au reste de l'application.
+Tout l'accès aux données passe par `src/services/annonces.js`, afin qu'un changement futur
+de base de données ne demande de réécrire que ce fichier, sans toucher au reste de
+l'application.
 
 ## Mettre en ligne
 
